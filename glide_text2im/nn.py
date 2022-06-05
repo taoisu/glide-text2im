@@ -10,7 +10,7 @@ import torch.nn.functional as F
 
 
 class GroupNorm32(nn.GroupNorm):
-    def __init__(self, num_groups, num_channels, swish, eps=1e-5):
+    def __init__(self, num_groups:int, num_channels:int, swish:float, eps:float=1e-5):
         super().__init__(num_groups=num_groups, num_channels=num_channels, eps=eps)
         self.swish = swish
 
@@ -23,7 +23,7 @@ class GroupNorm32(nn.GroupNorm):
         return y
 
 
-def conv_nd(dims, *args, **kwargs):
+def conv_nd(dims:int, *args, **kwargs):
     """
     Create a 1D, 2D, or 3D convolution module.
     """
@@ -74,7 +74,7 @@ def scale_module(module, scale):
     return module
 
 
-def normalization(channels, swish=0.0):
+def normalization(channels:int, swish:float=0.0):
     """
     Make a standard normalization layer, with an optional swish activation.
 
@@ -84,7 +84,7 @@ def normalization(channels, swish=0.0):
     return GroupNorm32(num_channels=channels, num_groups=32, swish=swish)
 
 
-def timestep_embedding(timesteps, dim, max_period=10000):
+def timestep_embedding(timesteps:th.Tensor, dim:int, max_period:int=10000):
     """
     Create sinusoidal timestep embeddings.
 

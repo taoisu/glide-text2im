@@ -7,6 +7,8 @@ Simplified from: https://github.com/openai/guided-diffusion/blob/main/guided_dif
 import numpy as np
 import torch as th
 
+from typing import Callable
+
 from .gaussian_diffusion import GaussianDiffusion
 
 
@@ -74,7 +76,7 @@ class SpacedDiffusion(GaussianDiffusion):
     :param kwargs: the kwargs to create the base diffusion process.
     """
 
-    def __init__(self, use_timesteps, **kwargs):
+    def __init__(self, use_timesteps:set, **kwargs):
         self.use_timesteps = set(use_timesteps)
         self.timestep_map = []
         self.original_num_steps = len(kwargs["betas"])
@@ -90,7 +92,7 @@ class SpacedDiffusion(GaussianDiffusion):
         kwargs["betas"] = np.array(new_betas)
         super().__init__(**kwargs)
 
-    def p_mean_variance(self, model, *args, **kwargs):
+    def p_mean_variance(self, model:Callable, *args, **kwargs):
         return super().p_mean_variance(self._wrap_model(model), *args, **kwargs)
 
     def condition_mean(self, cond_fn, *args, **kwargs):
@@ -106,7 +108,7 @@ class SpacedDiffusion(GaussianDiffusion):
 
 
 class _WrappedModel:
-    def __init__(self, model, timestep_map, original_num_steps):
+    def __init__(self, model:Callable, timestep_map:list, original_num_steps:int):
         self.model = model
         self.timestep_map = timestep_map
         self.original_num_steps = original_num_steps
