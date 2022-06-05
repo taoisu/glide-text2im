@@ -6,6 +6,8 @@ from .nn import timestep_embedding
 from .unet import UNetModel
 from .xf import LayerNorm, Transformer, convert_module_to_f16
 
+from .tokenizer.bpe import Encoder
+
 
 class Text2ImUNet(UNetModel):
     """
@@ -23,17 +25,17 @@ class Text2ImUNet(UNetModel):
 
     def __init__(
         self,
-        text_ctx,
-        xf_width,
-        xf_layers,
-        xf_heads,
-        xf_final_ln,
-        tokenizer,
+        text_ctx:int,           # e.g. 128
+        xf_width:int,           # e.g. 512
+        xf_layers:int,          # e.g. 16
+        xf_heads:int,           # e.g. 8
+        xf_final_ln:bool,
+        tokenizer:Encoder,
         *args,
-        cache_text_emb=False,
-        xf_ar=0.0,
-        xf_padding=False,
-        share_unemb=False,
+        cache_text_emb:bool=False,
+        xf_ar:float=0.0,
+        xf_padding:bool=False,
+        share_unemb:bool=False,
         **kwargs,
     ):
         self.text_ctx = text_ctx
@@ -86,7 +88,7 @@ class Text2ImUNet(UNetModel):
             if self.xf_ar:
                 self.unemb.to(th.float16)
 
-    def get_text_emb(self, tokens, mask):
+    def get_text_emb(self, tokens:th.Tensor, mask:th.Tensor):
         assert tokens is not None
 
         if self.cache_text_emb and self.cache is not None:
@@ -120,7 +122,7 @@ class Text2ImUNet(UNetModel):
     def del_cache(self):
         self.cache = None
 
-    def forward(self, x, timesteps, tokens=None, mask=None):
+    def forward(self, x:th.Tensor, timesteps:th.Tensor, tokens:th.Tensor=None, mask:th.Tensor=None):
         hs = []
         emb = self.time_embed(timestep_embedding(timesteps, self.model_channels))
         if self.xf_width:
@@ -182,7 +184,14 @@ class InpaintText2ImUNet(Text2ImUNet):
             args[1] = args[1] * 2 + 1
         super().__init__(*args, **kwargs)
 
-    def forward(self, x, timesteps, inpaint_image=None, inpaint_mask=None, **kwargs):
+    def forward(
+        self,
+        x:th.Tensor,
+        timesteps:th.Tensor,
+        inpaint_image:th.Tensor=None,
+        inpaint_mask:th.Tensor=None,
+        **kwargs
+    ):
         if inpaint_image is None:
             inpaint_image = th.zeros_like(x)
         if inpaint_mask is None:

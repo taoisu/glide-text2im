@@ -27,7 +27,7 @@ class TimestepEmbedSequential(nn.Sequential, TimestepBlock):
     support it as an extra input.
     """
 
-    def forward(self, x, emb, encoder_out=None):
+    def forward(self, x:th.Tensor, emb:th.Tensor, encoder_out:th.Tensor=None):
         for layer in self:
             if isinstance(layer, TimestepBlock):
                 x = layer(x, emb)
@@ -48,7 +48,7 @@ class Upsample(nn.Module):
                  upsampling occurs in the inner-two dimensions.
     """
 
-    def __init__(self, channels, use_conv, dims=2, out_channels=None):
+    def __init__(self, channels:int, use_conv:bool, dims:int=2, out_channels:int=None):
         super().__init__()
         self.channels = channels
         self.out_channels = out_channels or channels
@@ -78,7 +78,7 @@ class Downsample(nn.Module):
                  downsampling occurs in the inner-two dimensions.
     """
 
-    def __init__(self, channels, use_conv, dims=2, out_channels=None):
+    def __init__(self, channels:int, use_conv:bool, dims:int=2, out_channels:int=None):
         super().__init__()
         self.channels = channels
         self.out_channels = out_channels or channels
@@ -115,16 +115,16 @@ class ResBlock(TimestepBlock):
 
     def __init__(
         self,
-        channels,
-        emb_channels,
-        dropout,
-        out_channels=None,
-        use_conv=False,
-        use_scale_shift_norm=False,
-        dims=2,
-        use_checkpoint=False,
-        up=False,
-        down=False,
+        channels:int,                   # e.g. 192
+        emb_channels:int,               # e.g. 768
+        dropout:float,                  # e.g. 0.1
+        out_channels:int=None,          # e.g. 192
+        use_conv:bool=False,
+        use_scale_shift_norm:bool=False,
+        dims:int=2,
+        use_checkpoint:bool=False,
+        up:bool=False,
+        down:bool=False,
     ):
         super().__init__()
         self.channels = channels
@@ -213,11 +213,11 @@ class AttentionBlock(nn.Module):
 
     def __init__(
         self,
-        channels,
-        num_heads=1,
-        num_head_channels=-1,
-        use_checkpoint=False,
-        encoder_channels=None,
+        channels:int,
+        num_heads:int=1,
+        num_head_channels:int=-1,
+        use_checkpoint:bool=False,
+        encoder_channels:int=None,
     ):
         super().__init__()
         self.channels = channels
@@ -237,7 +237,7 @@ class AttentionBlock(nn.Module):
             self.encoder_kv = conv_nd(1, encoder_channels, channels * 2, 1)
         self.proj_out = zero_module(conv_nd(1, channels, channels, 1))
 
-    def forward(self, x, encoder_out=None):
+    def forward(self, x:th.Tensor, encoder_out:th.Tensor=None):
         b, c, *spatial = x.shape
         qkv = self.qkv(self.norm(x).view(b, c, -1))
         if encoder_out is not None:
@@ -254,11 +254,11 @@ class QKVAttention(nn.Module):
     A module which performs QKV attention. Matches legacy QKVAttention + input/ouput heads shaping
     """
 
-    def __init__(self, n_heads):
+    def __init__(self, n_heads:int):
         super().__init__()
         self.n_heads = n_heads
 
-    def forward(self, qkv, encoder_kv=None):
+    def forward(self, qkv:th.Tensor, encoder_kv:th.Tensor=None):
         """
         Apply QKV attention.
 
@@ -314,23 +314,23 @@ class UNetModel(nn.Module):
 
     def __init__(
         self,
-        in_channels,
-        model_channels,
-        out_channels,
-        num_res_blocks,
-        attention_resolutions,
-        dropout=0,
-        channel_mult=(1, 2, 4, 8),
-        conv_resample=True,
-        dims=2,
-        num_classes=None,
-        use_checkpoint=False,
-        use_fp16=False,
-        num_heads=1,
-        num_head_channels=-1,
-        num_heads_upsample=-1,
-        use_scale_shift_norm=False,
-        resblock_updown=False,
+        in_channels:int,                # e.g. 7
+        model_channels:int,             # e.g. 192
+        out_channels:int,               # e.g. 6
+        num_res_blocks:int,             # e.g. 3
+        attention_resolutions:tuple,    # e.g. (2,4,8)
+        dropout:float=0,
+        channel_mult:tuple=(1, 2, 4, 8),
+        conv_resample:bool=True,
+        dims:int=2,
+        num_classes:int=None,
+        use_checkpoint:bool=False,
+        use_fp16:bool=False,
+        num_heads:int=1,
+        num_head_channels:int=-1,
+        num_heads_upsample:int=-1,
+        use_scale_shift_norm:bool=False,
+        resblock_updown:bool=False,
         encoder_channels=None,
     ):
         super().__init__()
@@ -516,7 +516,7 @@ class UNetModel(nn.Module):
         self.middle_block.apply(convert_module_to_f32)
         self.output_blocks.apply(convert_module_to_f32)
 
-    def forward(self, x, timesteps, y=None):
+    def forward(self, x:th.Tensor, timesteps:th.Tensor, y:th.Tensor=None):
         """
         Apply the model to an input batch.
 

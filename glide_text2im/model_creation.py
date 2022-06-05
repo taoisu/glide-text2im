@@ -7,6 +7,7 @@ from glide_text2im.text2im_model import (
     Text2ImUNet,
 )
 from glide_text2im.tokenizer.bpe import get_encoder
+from typing import Union
 
 
 def model_and_diffusion_defaults():
@@ -52,30 +53,30 @@ def model_and_diffusion_defaults_upsampler():
 
 
 def create_model_and_diffusion(
-    image_size,
-    num_channels,
-    num_res_blocks,
-    channel_mult,
-    num_heads,
-    num_head_channels,
-    num_heads_upsample,
-    attention_resolutions,
-    dropout,
-    text_ctx,
-    xf_width,
-    xf_layers,
-    xf_heads,
-    xf_final_ln,
-    xf_padding,
-    diffusion_steps,
-    noise_schedule,
-    timestep_respacing,
-    use_scale_shift_norm,
-    resblock_updown,
-    use_fp16,
-    cache_text_emb,
-    inpaint,
-    super_res,
+    image_size: int,
+    num_channels: int,
+    num_res_blocks: int,
+    channel_mult: Union[str, tuple],
+    num_heads: int,
+    num_head_channels: int,
+    num_heads_upsample: int,
+    attention_resolutions: str,
+    dropout: float,
+    text_ctx: int,
+    xf_width: int,
+    xf_layers: int,
+    xf_heads: int,
+    xf_final_ln: bool,
+    xf_padding: bool,
+    diffusion_steps: int,
+    noise_schedule: str,
+    timestep_respacing: str,
+    use_scale_shift_norm: bool,
+    resblock_updown: bool,
+    use_fp16: bool,
+    cache_text_emb: bool,
+    inpaint: bool,
+    super_res: bool,
 ):
     model = create_model(
         image_size,
@@ -109,27 +110,27 @@ def create_model_and_diffusion(
 
 
 def create_model(
-    image_size,
-    num_channels,
-    num_res_blocks,
-    channel_mult,
-    attention_resolutions,
-    num_heads,
-    num_head_channels,
-    num_heads_upsample,
-    use_scale_shift_norm,
-    dropout,
-    text_ctx,
-    xf_width,
-    xf_layers,
-    xf_heads,
-    xf_final_ln,
-    xf_padding,
-    resblock_updown,
-    use_fp16,
-    cache_text_emb,
-    inpaint,
-    super_res,
+    image_size: int,                    # e.g. 64
+    num_channels: int,                  # e.g. 192
+    num_res_blocks: int,                # e.g. 3
+    channel_mult: Union[str, tuple],    # e.g. "", (1, 2, 3, 4)
+    attention_resolutions: str,         # e.g. "32,16,8"
+    num_heads: int,                     # e.g. 1
+    num_head_channels: int,             # e.g. 64
+    num_heads_upsample: int,            # e.g. -1
+    use_scale_shift_norm: bool,
+    dropout: float,                     # e.g. 0.1
+    text_ctx: int,                      # e.g. 128
+    xf_width: int,                      # e.g. 512
+    xf_layers: int,                     # e.g. 16
+    xf_heads: int,                      # e.g. 8
+    xf_final_ln: bool,
+    xf_padding: bool,
+    resblock_updown: bool,
+    use_fp16: bool,
+    cache_text_emb: bool,
+    inpaint: bool,
+    super_res: bool,
 ):
     if channel_mult == "":
         if image_size == 256:
@@ -182,9 +183,9 @@ def create_model(
 
 
 def create_gaussian_diffusion(
-    steps,
-    noise_schedule,
-    timestep_respacing,
+    steps:int,                  # e.g. 1000
+    noise_schedule:str,         # e.g. "squaredcos_cap_v2"
+    timestep_respacing:str,     # e.g. "200"
 ):
     betas = get_named_beta_schedule(noise_schedule, steps)
     if not timestep_respacing:

@@ -7,6 +7,8 @@ import math
 import numpy as np
 import torch as th
 
+from typing import Callable
+
 
 def _warmup_beta(beta_start, beta_end, num_diffusion_timesteps, warmup_frac):
     betas = beta_end * np.ones(num_diffusion_timesteps, dtype=np.float64)
@@ -49,7 +51,7 @@ def get_beta_schedule(beta_schedule, *, beta_start, beta_end, num_diffusion_time
     return betas
 
 
-def get_named_beta_schedule(schedule_name, num_diffusion_timesteps):
+def get_named_beta_schedule(schedule_name:str, num_diffusion_timesteps:int):
     """
     Get a pre-defined beta schedule for the given name.
 
@@ -77,7 +79,7 @@ def get_named_beta_schedule(schedule_name, num_diffusion_timesteps):
         raise NotImplementedError(f"unknown beta schedule: {schedule_name}")
 
 
-def betas_for_alpha_bar(num_diffusion_timesteps, alpha_bar, max_beta=0.999):
+def betas_for_alpha_bar(num_diffusion_timesteps:int, alpha_bar, max_beta=0.999):
     """
     Create a beta schedule that discretizes the given alpha_t_bar function,
     which defines the cumulative product of (1-beta) over time from t = [0,1].
@@ -111,7 +113,7 @@ class GaussianDiffusion:
     def __init__(
         self,
         *,
-        betas,
+        betas: np.ndarray,
     ):
         # Use float64 for accuracy.
         betas = np.array(betas, dtype=np.float64)
@@ -181,7 +183,7 @@ class GaussianDiffusion:
             + _extract_into_tensor(self.sqrt_one_minus_alphas_cumprod, t, x_start.shape) * noise
         )
 
-    def q_posterior_mean_variance(self, x_start, x_t, t):
+    def q_posterior_mean_variance(self, x_start:th.Tensor, x_t:th.Tensor, t:th.Tensor):
         """
         Compute the mean and variance of the diffusion posterior:
 
@@ -205,7 +207,15 @@ class GaussianDiffusion:
         )
         return posterior_mean, posterior_variance, posterior_log_variance_clipped
 
-    def p_mean_variance(self, model, x, t, clip_denoised=True, denoised_fn=None, model_kwargs=None):
+    def p_mean_variance(
+        self,
+        model:Callable,
+        x:th.Tensor,
+        t:th.Tensor,
+        clip_denoised:bool=True,
+        denoised_fn:Callable=None,
+        model_kwargs:dict=None,
+    ):
         """
         Apply the model to get p(x_{t-1} | x_t), as well as a prediction of
         the initial x, x_0.
@@ -265,7 +275,7 @@ class GaussianDiffusion:
             "extra": extra,
         }
 
-    def _predict_xstart_from_eps(self, x_t, t, eps):
+    def _predict_xstart_from_eps(self, x_t:th.Tensor, t:th.Tensor, eps:th.Tensor):
         assert x_t.shape == eps.shape
         return (
             _extract_into_tensor(self.sqrt_recip_alphas_cumprod, t, x_t.shape) * x_t
@@ -312,13 +322,13 @@ class GaussianDiffusion:
 
     def p_sample(
         self,
-        model,
-        x,
-        t,
-        clip_denoised=True,
-        denoised_fn=None,
-        cond_fn=None,
-        model_kwargs=None,
+        model:Callable,
+        x:th.Tensor,
+        t:th.Tensor,
+        clip_denoised:bool=True,
+        denoised_fn:Callable=None,
+        cond_fn:Callable=None,
+        model_kwargs:dict=None,
     ):
         """
         Sample x_{t-1} from the model at the given timestep.
@@ -356,15 +366,15 @@ class GaussianDiffusion:
 
     def p_sample_loop(
         self,
-        model,
-        shape,
-        noise=None,
-        clip_denoised=True,
-        denoised_fn=None,
-        cond_fn=None,
-        model_kwargs=None,
-        device=None,
-        progress=False,
+        model:Callable,
+        shape:tuple,
+        noise:th.Tensor=None,
+        clip_denoised:bool=True,
+        denoised_fn:Callable=None,
+        cond_fn:Callable=None,
+        model_kwargs:dict=None,
+        device:th.device=None,
+        progress:bool=False,
     ):
         """
         Generate samples from the model.
@@ -402,15 +412,15 @@ class GaussianDiffusion:
 
     def p_sample_loop_progressive(
         self,
-        model,
-        shape,
-        noise=None,
-        clip_denoised=True,
-        denoised_fn=None,
-        cond_fn=None,
-        model_kwargs=None,
-        device=None,
-        progress=False,
+        model:Callable,
+        shape:tuple,
+        noise:th.Tensor=None,
+        clip_denoised:bool=True,
+        denoised_fn:Callable=None,
+        cond_fn:Callable=None,
+        model_kwargs:dict=None,
+        device:th.device=None,
+        progress:bool=False,
     ):
         """
         Generate samples from the model and yield intermediate samples from
@@ -623,7 +633,7 @@ class GaussianDiffusion:
                 img = out["sample"]
 
 
-def _extract_into_tensor(arr, timesteps, broadcast_shape):
+def _extract_into_tensor(arr:np.ndarray, timesteps:th.Tensor, broadcast_shape:th.Size):
     """
     Extract values from a 1-D numpy array for a batch of indices.
 

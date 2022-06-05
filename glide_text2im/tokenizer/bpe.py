@@ -6,7 +6,9 @@ https://github.com/openai/gpt-2/blob/master/src/encoder.py
 import gzip
 import json
 import os
+
 from functools import lru_cache
+from torch import Tensor
 from typing import List, Tuple
 
 import regex as re
@@ -52,7 +54,8 @@ def get_pairs(word):
 
 
 class Encoder:
-    def __init__(self, encoder, bpe_merges, errors="replace"):
+
+    def __init__(self, encoder: dict, bpe_merges: list, errors: str = "replace"):
         self.encoder = encoder
         self.decoder = {v: k for k, v in self.encoder.items()}
         self.errors = errors  # how to handle errors in decoding
@@ -83,7 +86,7 @@ class Encoder:
         mask = [True] * len(tokens) + [False] * padding
         return padded_tokens, mask
 
-    def bpe(self, token):
+    def bpe(self, token: str):
         if token in self.cache:
             return self.cache[token]
         word = tuple(token)
@@ -124,7 +127,7 @@ class Encoder:
         self.cache[token] = word
         return word
 
-    def encode(self, text):
+    def encode(self, text: Tensor):
         text = text.lower()
         bpe_tokens = []
         for token in re.findall(self.pat, text):
